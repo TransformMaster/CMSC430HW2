@@ -16,6 +16,7 @@
     [(Prim1 p e)       (compile-prim p e)]
     [(If e1 e2 e3)     (compile-if e1 e2 e3)]
     ;; TODO: Handle cond
+    [(Cond cs e)    (compile-cond cs e)]
     ;; TODO: Handle case
     ))
 
@@ -76,8 +77,60 @@
          (compile-e e3)
          (Label l2))))
 
+(define (compile-cond cs e)
+  (let ((l1 (gensym 'cond))
+        (l2 (gensym 'cond)))
+    (seq (compile-clause-bool cs)
+         (Cmp 'rax val-false)
+         (Je l1)
+         (compile-clause-result cs)
+         (Jmp l2)
+         (Label l1)
+         (compile-e e)
+         (Label l2))))
+
+(define (compile-clause-bool cs)
+  (match cs
+    ['() (seq (Mov 'rax val-false))]
+    [(cons a b) (match a
+                  [(Clause p b1) (let ((l1 (gensym 'clausebool))
+                                       (l2 (gensym 'clausebool)))
+                                   (seq (compile-e p)
+                                      (Cmp 'rax val-true)
+                                      (Je l1)
+                                      (compile-clause-bool b)
+                                      (Jmp l2)
+                                      (Label l1)
+                                      (Mov 'rax val-true)
+                                      (Label l2)
+                                      ))]
+                  )
+                ]
+    )
+  )
 
 
-
+(define (compile-clause-result cs)
+  (match cs
+    ['() (seq (Mov 'rax 10))]
+    [(cons a '()) (match a
+                  [(Clause p b1) (seq (compile-e b1))]
+                  )]
+    [(cons a b) (match a
+                  [(Clause p b1) (let ((l1 (gensym 'clauseresult))
+                                       (l2 (gensym 'clauseresult)))
+                                   (seq (compile-e p)
+                                      (Cmp 'rax val-true)
+                                      (Je l1)
+                                      (compile-clause-result b)
+                                      (Jmp l2)
+                                      (Label l1)
+                                      (compile-e b1)
+                                      (Label l2)
+                                      ))]
+                  )
+                ]
+    )
+  )
 
 
