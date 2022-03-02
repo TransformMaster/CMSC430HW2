@@ -61,7 +61,7 @@
                   [(Clause p b1) (interp b1)]
                   )]
     [(cons a b) (match a
-                  [(Clause p b1) (if (check-in ) (interp b1) (case-result b e))]
+                  [(Clause p b1) (if (check-in p e) (interp b1) (case-result b e))]
                   )
                 ]
    )

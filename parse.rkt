@@ -44,7 +44,7 @@
   (match cs
     [(cons a '()) '()]
     [(cons a c) (match a
-                  [(cons e1 e2) (cons (Clause (parse-list e1) (parse (car e2))) (parse-clause c))]
+                  [(cons e1 e2) (cons (Clause (parse-list e1) (parse (car e2))) (parse-clause-case c))]
                   )
                 ]
    )
