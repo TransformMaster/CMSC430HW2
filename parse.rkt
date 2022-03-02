@@ -19,6 +19,8 @@
     ;; TODO: Handle cond  
     [(list 'cond cs ...)
      (if (equal? (car (last cs)) 'else) (Cond (parse-clause cs) (parse (car(cdr (last cs))))) (error "parse error"))]
+    [(list 'case e1 cs ...)
+     (if (equal? (car (last cs)) 'else) (Case (parse e1) (parse-clause-case cs) (parse(car(cdr (last cs))))) (error "parse error"))]
     ;; TODO: Handle case
     ;; TODO: Remove this clause once you've added clauses for
     ;; parsing cond and case; it's here just so running the test suite
@@ -35,4 +37,22 @@
                   )
                 ]
    )
+  )
+
+
+(define (parse-clause-case cs)
+  (match cs
+    [(cons a '()) '()]
+    [(cons a c) (match a
+                  [(cons e1 e2) (cons (Clause (parse-list e1) (parse (car e2))) (parse-clause c))]
+                  )
+                ]
+   )
+  )
+
+(define (parse-list e1)
+  (match e1
+    ['() '()]
+    [(cons a c) (cons (parse a) (parse-list c))]
+    )
   )

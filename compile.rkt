@@ -17,6 +17,7 @@
     [(If e1 e2 e3)     (compile-if e1 e2 e3)]
     ;; TODO: Handle cond
     [(Cond cs e)    (compile-cond cs e)]
+    [(Case e cs e1)    (compile-case e cs e1)]
     ;; TODO: Handle case
     ))
 
@@ -96,8 +97,8 @@
                   [(Clause p b1) (let ((l1 (gensym 'clausebool))
                                        (l2 (gensym 'clausebool)))
                                    (seq (compile-e p)
-                                      (Cmp 'rax val-true)
-                                      (Je l1)
+                                      (Cmp 'rax val-false)
+                                      (Jne l1)
                                       (compile-clause-bool b)
                                       (Jmp l2)
                                       (Label l1)
@@ -120,8 +121,8 @@
                   [(Clause p b1) (let ((l1 (gensym 'clauseresult))
                                        (l2 (gensym 'clauseresult)))
                                    (seq (compile-e p)
-                                      (Cmp 'rax val-true)
-                                      (Je l1)
+                                      (Cmp 'rax val-false)
+                                      (Jne l1)
                                       (compile-clause-result b)
                                       (Jmp l2)
                                       (Label l1)
@@ -133,4 +134,77 @@
     )
   )
 
+(define (compile-case e cs e1)
+  (let ((l1 (gensym 'case))
+        (l2 (gensym 'case)))
+    (seq (compile-case-bool cs e)
+         (Cmp 'rax val-false)
+         (Je l1)
+         (compile-case-result cs e)
+         (Jmp l2)
+         (Label l1)
+         (compile-e e1)
+         (Label l2)))
+  )
 
+(define (compile-case-bool cs e)
+  (match cs
+    ['() (seq (Mov 'rax val-false))]
+    [(cons a b) (match a
+                  [(Clause p b1) (let ((l1 (gensym 'casebool))
+                                       (l2 (gensym 'casebool)))
+                                   (seq (compile-check-in p e)
+                                        (Cmp 'rax val-false)
+                                        (Jne l1)
+                                        (compile-case-bool b e)
+                                        (Jmp l2)
+                                        (Label l1)
+                                        (Mov 'rax val-true)
+                                        (Label l2)
+                                         ))]
+                  )
+                ]
+    )
+  )
+
+(define (compile-case-result cs e)
+  (match cs
+    ['() (seq (Mov 'rax 10))]
+    [(cons a '()) (match a
+                  [(Clause p b1) (seq (compile-e b1))]
+                  )]
+    [(cons a b) (match a
+                  [(Clause p b1) (let ((l1 (gensym 'caseresult))
+                                       (l2 (gensym 'caseresult)))
+                                   (seq (compile-check-in p e)
+                                        (Cmp 'rax val-false)
+                                        (Jne l1)
+                                        (compile-case-result b e)
+                                        (Jmp l2)
+                                        (Label l1)
+                                        (compile-e b1)
+                                        (Label l2)
+                                         ))]
+                  )
+                ]
+    )
+  )
+
+(define (compile-check-in p e)
+  (match p
+    ['() (seq (Mov 'rax val-false))]
+    [(cons a b) (let ((l1 (gensym 'checkin))
+                      (l2 (gensym 'checkin)))
+                       (seq (compile-e a)
+                            (Mov 'rbx 'rax)
+                            (compile-e e)
+                            (Cmp 'rax 'rbx)
+                            (Je l1)
+                            (compile-check-in b e)
+                            (Jmp l2)
+                            (Label l1)
+                            (Mov 'rax val-true)
+                            (Label l2)
+       ))]
+    )
+  )
