@@ -17,6 +17,13 @@
   (check-equal? (run '(arithmetic-shift 1 10)) 1024 'arithmetic-shift-ex1)
   (check-equal? (run '(arithmetic-shift 255 -3)) 31 'arithmetic-shift-ex2)
   (check-equal? (run '(arithmetic-shift 1 #f)) 'err 'arithmetic-shift-ex3)
+  (check-equal? (run '(arithmetic-shift 1234 0)) 1234 'arithmetic-shift-ex4)
+  (check-equal? (run '(arithmetic-shift 10 1)) 20 'arithmetic-shift-ex5)
+  (check-equal? (run '(arithmetic-shift 254 -1)) 127 'arithmetic-shift-ex6)
+  (check-equal? (run '(arithmetic-shift 254 -3)) 31 'arithmetic-shift-ex7)
+  (check-equal? (run '(arithmetic-shift 1 -1)) 0 'arithmetic-shift-ex8)
+  (check-equal? (run '(arithmetic-shift 2 -2)) 0 'arithmetic-shift-ex9)
+  (check-equal? (run '(arithmetic-shift #t 1)) 'err 'arithmetic-shift-ex10)
   
   ;; Abscond examples
   (check-equal? (run 7) 7)
